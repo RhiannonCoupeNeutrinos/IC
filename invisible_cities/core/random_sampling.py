@@ -190,7 +190,7 @@ class NoiseSampler:
 
 
     def signal_to_noise(self, ids : np.array, charges : np.array,
-                        sample_width : int,
+                        sample_width : (int),
                         dark_model=DarkModel.threshold) -> np.array:
         """
         Find the signal to noise for the sipms in the array
