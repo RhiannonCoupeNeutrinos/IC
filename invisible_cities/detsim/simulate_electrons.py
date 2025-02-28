@@ -38,7 +38,7 @@ def generate_ionization_electrons(energies    : np.ndarray,
 
 def drift_electrons(zs             : np.ndarray,
                     n_electrons    : np.ndarray,
-                    lifetime       : float = 12 * units.ms,
+                    lifetime       : float = 1 * units.ms,
                     drift_velocity : float = 1  * units.mm / units.mus) -> np.ndarray:
     """ Returns number of electrons due to lifetime losses from secondary electrons
 
