@@ -59,7 +59,7 @@ def drift_electrons(zs             : np.ndarray,
     def attachment(n_ie, t):
         return np.count_nonzero(-lifetime * np.log(np.random.uniform(size=n_ie)) > t)
 
-        ts  = zs / drift_velocity
+    ts  = zs / drift_velocity
     return attachment(n_electrons, ts)
 
 
