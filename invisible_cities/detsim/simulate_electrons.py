@@ -56,10 +56,10 @@ def drift_electrons(zs             : np.ndarray,
             Number of ionization electrons that reach the EL gap
     """
     @np.vectorize
-    def attachment(n_ie, t):
-        return np.count_nonzero(-lifetime * np.log(np.random.uniform(size=n_ie)) > t)
-
     ts  = zs / drift_velocity
+    def attachment(n_ie, t):
+        return np.count_nonzero(-lifetime * np.log(np.random.uniform(size=n_ie)) > ts)
+
     return attachment(n_electrons, ts)
 
 
