@@ -20,7 +20,7 @@ from .. evm.nh5              import     SensorTable
 from .. types.symbols        import      SensorType
 from .. cities.components    import  get_run_number
 
-
+## Looked at this one, its simple enough and makes sense. It tests the bin waveform function
 def test_bin_waveforms():
     bins = np.arange(0, 20)
     data = np.arange(1, 51).reshape(2, 25)
