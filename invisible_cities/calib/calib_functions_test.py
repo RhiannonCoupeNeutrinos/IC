@@ -22,14 +22,15 @@ from .. cities.components    import  get_run_number
 
 ## Looked at this one, its simple enough and makes sense. It tests the bin waveform function
 def test_bin_waveforms():
-    bins = np.arange(0, 20)
-    data = np.arange(1, 51).reshape(2, 25)
-
-    expected = np.stack((np.histogram(data[0], bins)[0],
-                         np.histogram(data[1], bins)[0]))
-    actual   = cf.bin_waveforms(data, bins)
-    assert_array_equal(actual, expected)
-
+    bins=np.arange(0, 20) #20 bins that the waveforms are binned into. Can imagine as 20 energy bins each one unit wide.
+    
+    fake_wf_1=np.random.uniform(0, 20, size=100) #Fake waveform 100 microseconds long, containing values between 0 and 20 in each microsecond chunk.
+    fake_wf_2=np.random.uniform(0, 30, size=100) #Another fake waveform where some of the values can fall outside the binning region (to test this)
+    fake_file=[fake_wf_1, fake_wf_2] #Puts the two fake waveforms into a similar format to an incoming RWF file.
+    
+    test_value=np.stack((np.histogram(fake_wf_1, bins)[0], np.histogram(fake_wf_2, bins)[0])) #Value produced by test, what it should be.
+    function_value=cf.bin_waveforms(fake_file, bins) #Value produced by the function being tested.
+    assert_array_equal(function_value, test_value)
 
 def test_spaced_integrals():
     limits = np.array([2, 4, 6])
