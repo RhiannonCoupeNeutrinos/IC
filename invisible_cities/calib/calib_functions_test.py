@@ -69,44 +69,30 @@ def test_integral_limits():
     assert_array_equal(actual_llimits, expected_llim)
     assert_array_equal(actual_dlimits, expected_dlim)
 
-
-def test_filter_limits_inside():
-    sampling         =   1 * units.mus
-    n_integrals      =  10
-    start_int        =   5
-    width_int        =   1
-    period           =  50
-    fake_data_length = 500
-
-    (expected_llimits,
-     expected_dlimits) = cf.integral_limits(sampling, n_integrals, start_int, width_int, period)
-
-    actual_llimits = cf.filter_limits(expected_llimits, fake_data_length)
-    actual_dlimits = cf.filter_limits(expected_dlimits, fake_data_length)
-
-    assert_array_equal(actual_llimits, expected_llimits)
-    assert_array_equal(actual_dlimits, expected_dlimits)
-
-
-def test_filter_limits_outside():
+def test_filter_limits():
     sampling         =   1 * units.mus
     n_integrals      =  10
     start_int        =   5
     width_int        =   1
     period           =  50
     fake_data_length = 400
-
+    n_fit=int(fake_data_length/period)  #Number of integrals that would fit inside the fake data length.
+    
     (unfiltered_llimits,
      unfiltered_dlimits) = cf.integral_limits(sampling, n_integrals, start_int, width_int, period)
 
     filtered_llimits = cf.filter_limits(unfiltered_llimits, fake_data_length)
     filtered_dlimits = cf.filter_limits(unfiltered_dlimits, fake_data_length)
+    
+    expected_llimts=unfiltered_llimits[0:(2*n_fit)]
+    expected_dlimts=unfiltered_dlimits[0:(2*n_fit)]
 
-    assert len(filtered_llimits) < len(unfiltered_llimits)
+    assert len(filtered_llimits) < len(unfiltered_llimits)  #Tests filtered limits are a smaller set than the calculated integral limits.
     assert len(filtered_dlimits) < len(unfiltered_dlimits)
-    assert len(filtered_llimits) % 2 == 0
+    assert len(filtered_llimits) % 2 == 0   #Tests that the filter limits are divisible by two, so no open ended integrals.
     assert len(filtered_dlimits) % 2 == 0
-
+    assert_array_equal(filtered_llimits, expected_llimts)  #Tests that the filtered limits are the values of, and stop where we expect them to.
+    assert_array_equal(filtered_dlimits, expected_dlimts)
 
 @mark.parametrize("sensor_type        sensors".split(),
                   ((None,              None),
