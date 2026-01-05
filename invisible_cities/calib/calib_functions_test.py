@@ -132,14 +132,25 @@ def test_copy_sensor_table(config_tmpdir, sensor_type, sensors):
             assert sensor_info[0][1] == sensors[1]
 
 
-@mark.parametrize('sensor_type     , n_channel, gain_seed, gain_sigma_seed',
-                  ((SensorType.SIPM,         1,   16.5622,         2.5),
-                   (SensorType.PMT ,         5,   24.9557,         9.55162)))
-def test_seeds_db(sensor_type, n_channel, gain_seed, gain_sigma_seed, dbnew):
-    run_number = 6217
-    result = cf.seeds_db(sensor_type, dbnew, run_number, n_channel)
-    assert result == (gain_seed, gain_sigma_seed)
+@mark.parametrize('sensor_type, Detector, n_channel, gain_seed, gain_sigma_seed',
+                  ((SensorType.SIPM, "new",        1,   16.5622,         2.5),
+                   (SensorType.PMT , "new",      5,   24.9557,         9.55162),
+                   (SensorType.SIPM, "next100", 1,  17.0108,           1.95237),
+                   (SensorType.PMT, "next100",  5, 32.5141,            10.59980 ))) 
 
+
+#Edited to also test a PMT and SiPM from the NEXT100 database, to ensure this function works for both NEW and NEXT100.
+def test_seeds_db(sensor_type, n_channel, gain_seed, gain_sigma_seed, Detector):
+    if Detector=='new':
+        run_number_new = 6217
+        detector_new='new'
+        result = cf.seeds_db(sensor_type, detector_new, run_number_new, n_channel)
+        assert result == (gain_seed, gain_sigma_seed)
+    elif Detector=='next100':
+        run_number_n100 = 15539
+        detector_n100='next100'
+        result = cf.seeds_db(sensor_type, detector_n100, run_number_n100, n_channel)
+        assert result == (gain_seed, gain_sigma_seed)
 
 _dark_scaler_sipm = cf.dark_scaler(np.array([612, 1142, 2054, 3037, 3593, 3769, 3777, 3319, 2321, 1298, 690]))
 _dark_scaler_pmt  = cf.dark_scaler(np.array([ 30,  107,  258,  612, 1142, 2054, 3037, 3593                 ]))
