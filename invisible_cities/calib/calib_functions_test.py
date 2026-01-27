@@ -211,51 +211,71 @@ def test_pedestal_values():
     assert_approx_equal(ped_values.sigma_max, 1076.97317, 5)
     assert_approx_equal(ped_values.sigma_min,      0.001)
 
-
+#Edited this test to use an example spectrum with known gain and gain_sigma rather than use an input file. 
 def test_compute_seeds_from_spectrum(ICDATADIR):
-    PATH_IN = os.path.join(ICDATADIR, 'sipmcalspectra_R6358.h5')
-    # Suppress warnings from division by zero in some bins.
-    with warnings.catch_warnings(), tb.open_file(PATH_IN) as h5in:
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-        specsL   = np.array(h5in.root.HIST.sipm_spe ).sum(axis=0)
-        specsD   = np.array(h5in.root.HIST.sipm_dark).sum(axis=0)
-        bins     = np.array(h5in.root.HIST.sipm_spe_bins)
-        min_stat = 10
+    #A mock SiPM noise spectrum which has the following properties:
+    #Gain = 17 ADC
+    #Sigma_gain = 2 ADC
+    #Total number of events = 10,000.
+    #SiPM noise parameter (mu) = 0.05 counts/mus.
 
-        for ich, (led, dar) in enumerate(zip(specsL, specsD)):
-            b1 = 0
-            b2 = len(dar)
-            try:
-                valid_bins = np.argwhere(led>=min_stat)
-                b1 = valid_bins[ 0][0]
-                b2 = valid_bins[-1][0]
-            except IndexError:
-                continue
+    fake_x_bins=np.arange(35,135)
 
-            peaks_dark = find_peaks_cwt(dar, np.arange(2, 20), min_snr=2)
-            if len(peaks_dark) == 0:
-                continue
+    fake_y_vals=np.array([1.15779866e-09, 4.34460742e-08, 1.26968040e-06, 2.88977927e-05,
+       5.12225632e-04, 7.07105674e-03, 7.60210243e-02, 6.36516243e-01,
+       4.15060729e+00, 2.10785231e+01, 8.33671760e+01, 2.56788980e+02,
+       6.16004740e+02, 1.15084837e+03, 1.67447449e+03, 1.89742818e+03,
+       1.67447450e+03, 1.15084842e+03, 6.16005061e+02, 2.56790715e+02,
+       8.33754548e+01, 2.11133783e+01, 4.28011029e+00, 1.06114024e+00,
+       1.30471131e+00, 3.14464162e+00, 7.07113664e+00, 1.40616446e+01,
+       2.46789054e+01, 3.82234346e+01, 5.22452408e+01, 6.30197913e+01,
+       6.70842247e+01, 6.30198213e+01, 5.22453566e+01, 3.82238233e+01,
+       2.46801018e+01, 1.40650100e+01, 7.07947448e+00, 3.15880078e+00,
+       1.27554690e+00, 5.19771223e-01, 3.07261417e-01, 3.40398733e-01,
+       4.91476319e-01, 7.04783524e-01, 9.41461229e-01, 1.15918311e+00,
+       1.31347523e+00, 1.36935416e+00, 1.31347362e+00, 1.15914794e+00,
+       9.41183386e-01, 7.03148687e-01, 4.83417032e-01, 3.05993996e-01,
+       1.78626821e-01, 9.67197060e-02, 4.95314942e-02, 2.55046694e-02,
+       1.52667867e-02, 1.24433026e-02, 1.31857342e-02, 1.53081668e-02,
+       1.75586151e-02, 1.91887609e-02, 1.97731080e-02, 1.91590200e-02,
+       1.74436414e-02, 1.49210364e-02, 1.19912500e-02, 9.05506035e-03,
+       6.42744662e-03, 4.29259343e-03, 2.70405296e-03, 1.61709860e-03,
+       9.33322097e-04, 5.40367178e-04, 3.37849055e-04, 2.48651749e-04,
+       2.19690527e-04, 2.17419011e-04, 2.22154813e-04, 2.23347072e-04,
+       2.16323699e-04, 2.00216956e-04, 1.76562200e-04, 1.48206124e-04,
+       1.18386790e-04, 9.00064461e-05, 6.51654784e-05, 4.49879149e-05,
+       2.96994942e-05, 1.88657874e-05, 1.16830926e-05, 7.23623968e-06,
+       4.67730244e-06, 3.31789791e-06, 2.65295029e-06, 2.34286859e-06])
 
-            gb0     = [(0, -100, 0), (np.inf, 100, 10000)]
-            sd0     = (dar.sum(), 0, 2)
-            sel     = np.arange(peaks_dark[0]-5, peaks_dark[0]+5)
-            errs    = poisson_sigma(dar[sel], default=0.1)
-            gfitRes = fitf.fit(fitf.gauss, bins[sel], dar[sel],
-                                sd0, sigma=errs, bounds=gb0)
+    #Fit to determine pedestal parameters.
+    gb0     = [(0, 1, 0), (np.inf, 100, 10000)]
+    sd0     = (fake_y_vals.sum(), 50, 2)
+    errs    = fitf.poisson_sigma(fake_y_vals, default=0.1)
+    gfitRes = fitf.fit(fitf.gauss, fake_x_bins, fake_y_vals, sd0, errs, bounds=gb0)    
+    ped_vals =np.array([gfitRes.values[0], gfitRes.values[1], gfitRes.values[2]])
 
-            ped_vals    = np.array([gfitRes.values[0], gfitRes.values[1],
-                                    gfitRes.values[2]])
-            p_range     = slice(b1, b2)
-            p_bins      = (bins[p_range] >= -5) & (bins[p_range] <= 5)
-            scaler_func = cf.dark_scaler(dar[p_range][p_bins])
-            sens_values = cf.sensor_values(SensorType.SIPM, scaler_func,
-                                           bins[p_range], led[p_range],
-                                           ped_vals)
+    #Isolate bins and values around n=1 spectrum peak.
+    first_peak_bins=[]
+    first_peak_values=[]
 
-            gain_seed, gain_sigma_seed = cf.compute_seeds_from_spectrum(sens_values, bins[p_range], ped_vals)
+    for i in range(25, 40):
+        first_peak_bins.append(fake_x_bins[i])
+        first_peak_values.append(fake_y_vals[i])
+    
+    first_peak_bins=np.array(first_peak_bins)
 
-            assert gain_seed       != 0
-            assert gain_sigma_seed != 0
+    #Make into format that the computer_seeds_from_spectrum function reads.
+    scaler_func = cf.dark_scaler(first_peak_values)
+    first_peak_sesnsor_vals=cf.sensor_values(SensorType.SIPM, scaler_func, first_peak_bins, first_peak_values, ped_vals)
+    first_peak_BINS= (first_peak_bins>= 60) & (first_peak_bins <= 74)
+
+    #Applies function that is being tested.
+    gain_seed, gain_sigma_seed = cf.compute_seeds_from_spectrum(first_peak_sesnsor_vals, first_peak_bins, ped_vals)
+
+    #Testing lines. Ensures calculated gains are within 1% of the ones known to be true for this spectrum.
+    assert (0.99*17)<gain_seed<(1.01*17)
+    assert (0.99*2)<gain_sigma_seed<(1.01*2)
+
 
 
 def test_seeds_without_using_db(ICDATADIR, dbnew):
