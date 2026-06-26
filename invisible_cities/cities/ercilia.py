@@ -163,25 +163,32 @@ def ercilia( files_in         : OneOrManyFiles
                                       group_name  = "HIST",
                                       n_sensors   = nfiber,
                                       bin_centres = bin_centres)
+        
+        if sensor_type=="SiPM_N100" or "SiPM_fibre":
+        
+            pipe_steps = [
+                fl.slice(*event_range, close_all=True),
+                event_count.spy,
+                print_every(print_mod),
+                subtract_baseline,
+                extract_charges,
+                bin_charges,
+            ]
+            fork_branches = [("hist", accumulate_light.sink), write_run_and_event]
 
-        pipe_steps = [
-            fl.slice(*event_range, close_all=True),
-            event_count.spy,
-            print_every(print_mod),
-            subtract_baseline,
-            extract_charges,
-            bin_charges,
-        ]
-        fork_branches = [("hist", accumulate_light.sink), write_run_and_event]
+            if amplification:
+                write_amp_row       = amplification_writer(h5out)
+                write_amplification = fl.sink(write_amp_row,
+                                               args=("event_number", "channels", "areas_hg", "areas_lg"))
+                pipe_steps   += [subtract_baseline_lg, extract_pairs]
+                fork_branches.append(write_amplification)
 
-        if amplification:
-            write_amp_row       = amplification_writer(h5out)
-            write_amplification = fl.sink(write_amp_row,
-                                           args=("event_number", "channels", "areas_hg", "areas_lg"))
-            pipe_steps   += [subtract_baseline_lg, extract_pairs]
-            fork_branches.append(write_amplification)
-
-        pipe_steps.append(fl.fork(*fork_branches))
+            pipe_steps.append(fl.fork(*fork_branches))
+            
+        elif sensor_type=="PMT":
+            
+            pipe_steps = [processing,
+                          fl.fork(("hist", accumulate_light.sink), write_run_and_event)]
 
         out = fl.push(
             source = wf_from_files(files_in, WfType.rwf, detector_db,
