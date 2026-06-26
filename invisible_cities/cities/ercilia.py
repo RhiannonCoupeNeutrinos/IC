@@ -57,6 +57,7 @@ from .  components import waveform_binner
 from .  components import waveform_integrator
 from .  components import peak_charge_binner
 
+print("begin")
 
 @city
 def ercilia( files_in         : OneOrManyFiles
