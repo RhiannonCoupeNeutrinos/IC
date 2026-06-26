@@ -161,6 +161,27 @@ def sipm_subtract_mode_and_calibrate  (sipm_wfs, adc_to_pes): return calibrate_w
 def sipm_subtract_mean_and_calibrate  (sipm_wfs, adc_to_pes): return calibrate_wfs(subtract_mean  (sipm_wfs), adc_to_pes)
 def sipm_subtract_median_and_calibrate(sipm_wfs, adc_to_pes): return calibrate_wfs(subtract_median(sipm_wfs), adc_to_pes)
 
+#Previously in Phyllis city. PMT proc_mode definitions.
+def pmt_deconvolver(detector_db, run_number, n_baseline):
+    deconvolute = deconv_pmt(detector_db, run_number, n_baseline, mask=False)
+    return deconvolute
+
+
+def pmt_deconvolver_maw(detector_db, run_number, n_baseline, n_maw):
+    deconvolute = pmt_deconvolver(detector_db, run_number, n_baseline)
+    def deconv_pmt_maw(rwf):
+        cwf = deconvolute(rwf)
+        return csf.pmt_subtract_maw(cwf, n_maw)
+    return deconv_pmt_maw
+
+
+def mode_subtractor(detector_db, run_number):
+    active = load_db.DataPMT(detector_db, run_number).Active.values
+    active = np.nonzero(active)[0].tolist()
+    def subtract_mode(rwf):
+        return csf.subtract_mode(rwf)[active]
+    return subtract_mode
+
 
 # Dict of functions for SiPM processing
 sipm_processing = {
