@@ -187,6 +187,8 @@ def ercilia( files_in         : OneOrManyFiles
             
         elif sensor_type=="PMT":
             
+            processing  = fl.map(proc, args="pmt", out="cwf")
+            
             pipe_steps = [processing,
                           fl.fork(("hist", accumulate_light.sink), write_run_and_event)]
 
