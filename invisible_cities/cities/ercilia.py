@@ -117,6 +117,11 @@ def ercilia( files_in         : OneOrManyFiles
             min_distance   = 10,
             merge_distance = 30,
         )
+    if sensor_type=="SiPM_fibre" or "PMT":
+        sampling= 25 * units.ns
+        
+    elif sensor_type=="SiPM_N100":
+        sampling= 1 * units.mus
 
     subtract_baseline = fl.map(
         partial(csf.subtract_and_flip, proc_mode=proc_mode, flip=sensor_type is not SensorType.SIPM),
