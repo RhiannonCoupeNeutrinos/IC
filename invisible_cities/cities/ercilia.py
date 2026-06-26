@@ -83,9 +83,9 @@ def ercilia( files_in         : OneOrManyFiles
         raise ValueError(f"Unrecognized processing mode: {proc_mode}")
         
     elif sensor_type=="PMT":
-        if   proc_mode_PMT is PMTCalibMode.gain         : proc = pmt_deconvolver    (detector_db, run_number, n_baseline       )
-        elif proc_mode_PMT is PMTCalibMode.gain_maw     : proc = pmt_deconvolver_maw(detector_db, run_number, n_baseline, n_maw)
-        elif proc_mode_PMT is PMTCalibMode.gain_nodeconv: proc = mode_subtractor    (detector_db, run_number)
+        if   proc_mode_PMT is PMTCalibMode.gain         : proc = csf.pmt_deconvolver    (detector_db, run_number, n_baseline       )
+        elif proc_mode_PMT is PMTCalibMode.gain_maw     : proc = csf.pmt_deconvolver_maw(detector_db, run_number, n_baseline, n_maw)
+        elif proc_mode_PMT is PMTCalibMode.gain_nodeconv: proc = csf.mode_subtractor    (detector_db, run_number)
         else                                            : raise ValueError(f"Unrecognized processing mode: {proc_mode_PMT}")
 
     if amplification and sensor_type is SensorType.SIPM:
