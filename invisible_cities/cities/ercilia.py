@@ -61,25 +61,32 @@ print("begin")
 
 @city
 def ercilia( files_in         : OneOrManyFiles
-           , file_out         : str
-           , compression      : str
-           , event_range      : EventRangeType
-           , print_mod        : int
-           , detector_db      : str
-           , run_number       : int
-           , proc_mode        : SiPMCalibMode
-           , min_bin          : float
-           , max_bin          : float
-           , bin_width        : float
-           , number_integrals : int
-           , integral_start   : float
-           , integral_width   : float
-           , integrals_period : float
-           , amplification    : bool       = False
-           , sensor_type      : SensorType = SensorType.PMT
-           ):
+         , file_out         : str
+         , compression      : str
+         , event_range      : EventRangeType
+         , print_mod        : int
+         , detector_db      : str
+         , run_number       : int
+         , proc_mode_SiPM   : Optional(SiPMCalibMode)
+         , proc_mode_PMT    : Optional(PMTCalibMode)
+         , min_bin          : float
+         , max_bin          : float
+         , bin_width        : float
+         , number_integrals : int
+         , integral_start   : float
+         , integral_width   : float
+         , integrals_period : float
+         , amplification    : bool       = False
+         ,sensor_type.      : SensorType = SensorType.PMT
+         ):
     if proc_mode not in SiPMCalibMode:
         raise ValueError(f"Unrecognized processing mode: {proc_mode}")
+        
+    elif sensor_type=="PMT":
+        if   proc_mode_PMT is PMTCalibMode.gain         : proc = pmt_deconvolver    (detector_db, run_number, n_baseline       )
+        elif proc_mode_PMT is PMTCalibMode.gain_maw     : proc = pmt_deconvolver_maw(detector_db, run_number, n_baseline, n_maw)
+        elif proc_mode_PMT is PMTCalibMode.gain_nodeconv: proc = mode_subtractor    (detector_db, run_number)
+        else                                            : raise ValueError(f"Unrecognized processing mode: {proc_mode_PMT}")
 
     if amplification and sensor_type is SensorType.SIPM:
         raise ValueError(
